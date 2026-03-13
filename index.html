@@ -434,6 +434,7 @@ let state = {
   normCorrect: 0,
   normAttempted: 0,
   answered: false,
+  lastSelectedIdx: null,
   mcSelected: new Set(),
   normInput: '',
 };
@@ -605,10 +606,13 @@ function startMode(mode) {
     state.currentIdx = 0;
     state.streak = 0;
     state.answered = false;
-    if (!state.keepScoreOnLoop) {
+    state.lastSelectedIdx = null;
+    if (state.keepScoreOnLoop) {
+      loadExamState();
+    } else {
       state.examScore = 0; state.examCorrect = 0; state.examWrong = 0;
+      saveExamState();
     }
-    loadExamState();
     document.getElementById('quizTitle').textContent = 'Exam Mode';
     showScreen('quizScreen');
     renderQuestion();
@@ -692,8 +696,14 @@ function renderQuestion() {
   } else {
     // Single choice
     html += q.options.map((opt, i) => {
-      return `<button class="option-btn" id="opt_${i}" onclick="selectSC(${i})">
-        <span class="opt-indicator"></span>
+      let cls = 'option-btn';
+      let indText = '';
+      if (state.answered) {
+        if (q.correctIndexes.includes(i)) { cls += ' correct'; indText = '✓'; }
+        else if (i === state.lastSelectedIdx) { cls += ' wrong'; indText = '✗'; }
+      }
+      return `<button class="${cls}" id="opt_${i}" onclick="selectSC(${i})" ${state.answered ? 'disabled' : ''}>
+        <span class="opt-indicator">${indText}</span>
         <span>${opt}</span>
       </button>`;
     }).join('');
@@ -723,7 +733,7 @@ function renderQuestion() {
           </div>
           <div class="score-row">
             <div class="score-row-left">📋 Total Questions:</div>
-            <div class="score-row-right blue">${idx} / 18</div>
+            <div class="score-row-right blue">${state.examCorrect + state.examWrong} / 18</div>
           </div>
         </div>
         <div class="score-meta">Each correct: +2 pts · Each wrong: -2 pts</div>
@@ -757,10 +767,10 @@ function getSessionScore() { return { ...sessionScore, streak: state.streak }; }
 function selectSC(idx) {
   if (state.answered) return;
   state.answered = true;
+  state.lastSelectedIdx = idx;
   const q = state.questions[state.currentIdx];
   const isCorrect = q.correctIndexes.includes(idx);
 
-  // Update scores
   if (!state.scores[q.text]) state.scores[q.text] = { correct: 0, attempts: 0 };
   state.scores[q.text].attempts++;
 
@@ -783,31 +793,7 @@ function selectSC(idx) {
     }
   }
   saveScores();
-
-  // Highlight
-  q.options.forEach((_, i) => {
-    const btn = document.getElementById('opt_' + i);
-    if (!btn) return;
-    const ind = btn.querySelector('.opt-indicator');
-    if (q.correctIndexes.includes(i)) {
-      btn.classList.add('correct');
-      ind.textContent = '✓';
-    } else if (i === idx && !isCorrect) {
-      btn.classList.add('wrong');
-      ind.textContent = '✗';
-    }
-    btn.disabled = true;
-  });
-
-  // Add next btn
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'next-btn';
-  nextBtn.textContent = 'Next Question ›';
-  nextBtn.onclick = nextQuestion;
-  document.getElementById('quizBody').appendChild(nextBtn);
-
-  // Update exam score live
-  if (state.mode === 'exam') renderQuestion();
+  renderQuestion();
 }
 
 function toggleMC(idx) {
@@ -862,6 +848,7 @@ function submitMC() {
 function nextQuestion() {
   state.currentIdx++;
   state.answered = false;
+  state.lastSelectedIdx = null;
   state.mcSelected = new Set();
   if (state.currentIdx >= state.questions.length) {
     renderResult();
@@ -874,6 +861,7 @@ function nextQuestion() {
 function restartRound() {
   state.currentIdx = 0;
   state.answered = false;
+  state.lastSelectedIdx = null;
   state.mcSelected = new Set();
   state.streak = 0;
   sessionScore = { correct: 0, wrong: 0 };
