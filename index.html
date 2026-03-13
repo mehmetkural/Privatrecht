@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz App - Privatrecht</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1c2230;
+    --card: #1e2433;
+    --card2: #252d40;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --orange: #f97316;
+    --yellow: #eab308;
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+
+  /* ===== LAYOUT ===== */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+  .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* ===== HOME SCREEN ===== */
+  .home-header { text-align: center; padding: 40px 0 28px; }
+  .grad-circle {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 40px; box-shadow: 0 0 40px rgba(99,102,241,0.35);
+  }
+  .home-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  .home-header p { color: var(--text2); font-size: 15px; }
+
+  /* Mastery Card */
+  .mastery-card {
+    background: var(--card); border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 16px; padding: 18px; margin-bottom: 14px;
+  }
+  .mastery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mastery-label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+  .mastery-pct { color: var(--red); font-weight: 700; font-size: 16px; }
+  .progress-bar { height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.5s ease; }
+  .mastery-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .mstat { text-align: center; }
+  .mstat-val { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .mstat-val.green { color: var(--green); }
+  .mstat-val.yellow { color: var(--yellow); }
+  .mstat-val.gray { color: var(--text3); }
+  .mstat-lbl { font-size: 11px; color: var(--text2); }
+  .mastery-desc { font-size: 11px; color: var(--text3); text-align: center; margin-top: 10px; }
+
+  /* Mode Cards */
+  .mode-card {
+    background: var(--card); border-radius: 16px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 16px; cursor: pointer; margin-bottom: 12px;
+    border: 1px solid var(--border); transition: transform 0.15s, opacity 0.15s;
+    text-decoration: none; color: inherit;
+  }
+  .mode-card:hover { transform: translateY(-2px); opacity: 0.92; }
+  .mode-icon {
+    width: 52px; height: 52px; border-radius: 14px; display: flex;
+    align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;
+  }
+  .mode-icon.exam { background: linear-gradient(135deg, #f97316, #ef4444); border: 1px solid rgba(239,68,68,0.3); }
+  .mode-icon.norm { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: 1px solid rgba(139,92,246,0.3); }
+  .mode-icon.weak { background: linear-gradient(135deg, #f97316, #ef4444); border: 1px solid rgba(239,68,68,0.3); }
+  .mode-info { flex: 1; }
+  .mode-info h3 { font-size: 17px; font-weight: 600; margin-bottom: 3px; }
+  .mode-info p { font-size: 13px; color: var(--text2); }
+  .mode-arrow { color: var(--text3); font-size: 16px; }
+
+  /* Section Header */
+  .section-header { font-size: 15px; font-weight: 600; color: var(--text2); margin: 24px 0 12px; letter-spacing: 0.02em; }
+
+  /* Semester Grid */
+  .semester-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+  .sem-card {
+    background: var(--card); border-radius: 16px; padding: 20px 16px;
+    cursor: pointer; text-align: center; border: 1px solid var(--border);
+    transition: transform 0.15s, border-color 0.15s; position: relative; overflow: hidden;
+  }
+  .sem-card:hover { transform: translateY(-2px); border-color: var(--blue); }
+  .sem-card.multi { border-color: rgba(139,92,246,0.3); }
+  .sem-card.multi:hover { border-color: var(--purple); }
+  .sem-card.klausur { border-color: rgba(34,197,94,0.3); }
+  .sem-card.klausur:hover { border-color: var(--green); }
+  .sem-icon { font-size: 28px; margin-bottom: 8px; }
+  .sem-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .sem-count { font-size: 12px; color: var(--text2); }
+  .sem-mastery-bar { height: 3px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+  .sem-mastery-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 99px; transition: width 0.5s; }
+
+  /* ===== QUIZ SCREEN ===== */
+  .quiz-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--bg); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
+  }
+  .back-btn {
+    background: none; border: none; color: var(--blue); font-size: 15px;
+    cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px;
+    border-radius: 8px; transition: background 0.15s;
+  }
+  .back-btn:hover { background: rgba(59,130,246,0.1); }
+  .quiz-title { font-size: 16px; font-weight: 600; }
+
+  .quiz-body { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .progress-section { margin-bottom: 18px; }
+  .progress-label { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 8px; }
+  .progress-bar2 { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill2 { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+  .progress-fill2.blue { background: var(--blue); }
+  .progress-fill2.exam { background: linear-gradient(90deg, #f97316, #ef4444); }
+  .progress-fill2.norm { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+
+  .sem-badge {
+    display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white; font-size: 12px; font-weight: 600; padding: 4px 12px;
+    border-radius: 99px; margin: 0 auto 16px; display: flex; width: fit-content;
+    margin-left: auto; margin-right: auto;
+  }
+
+  .question-card {
+    background: white; color: #1a1a2e; border-radius: 20px; padding: 24px 22px;
+    margin-bottom: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  .question-card .qtext { font-size: 17px; font-weight: 700; line-height: 1.5; }
+
+  .option-btn {
+    width: 100%; background: white; color: #1a1a2e; border: none; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 10px; cursor: pointer; font-size: 15px;
+    text-align: left; line-height: 1.4; transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px;
+    font-family: inherit;
+  }
+  .option-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.correct { background: #dcfce7 !important; color: #166534; }
+  .option-btn.wrong { background: #fee2e2 !important; color: #991b1b; }
+  .option-btn.correct-reveal { background: #dcfce7 !important; color: #166534; }
+  .option-btn .opt-indicator {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid #d1d5db;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .option-btn.correct .opt-indicator { border-color: var(--green); background: var(--green); color: white; }
+  .option-btn.wrong .opt-indicator { border-color: var(--red); background: var(--red); color: white; }
+  .option-btn.correct-reveal .opt-indicator { border-color: var(--green); background: var(--green); color: white; }
+
+  /* Checkbox style for MC */
+  .opt-checkbox {
+    width: 22px; height: 22px; border-radius: 6px; border: 2px solid #d1d5db;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: all 0.15s;
+  }
+  .option-btn.selected .opt-checkbox { border-color: var(--blue); background: var(--blue); color: white; }
+  .option-btn.mc-correct .opt-checkbox { border-color: var(--green); background: var(--green); color: white; }
+  .option-btn.mc-wrong .opt-checkbox { border-color: var(--red); background: var(--red); color: white; }
+  .option-btn.mc-correct { background: #dcfce7 !important; color: #166534; }
+  .option-btn.mc-wrong { background: #fee2e2 !important; color: #991b1b; }
+  .option-btn.mc-missed { background: #fef9c3 !important; color: #854d0e; }
+  .option-btn.mc-missed .opt-checkbox { border-color: var(--yellow); background: var(--yellow); color: white; }
+
+  .submit-btn {
+    width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 600; font-family: inherit;
+    background: linear-gradient(135deg, #3b82f6, #6366f1); color: white;
+    margin-bottom: 10px; transition: opacity 0.15s, transform 0.1s;
+  }
+  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .next-btn {
+    width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 600; font-family: inherit;
+    background: linear-gradient(135deg, #22c55e, #16a34a); color: white;
+    margin-bottom: 10px; transition: opacity 0.15s, transform 0.1s;
+  }
+  .next-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  /* ===== EXAM SCORE ===== */
+  .exam-score-section { margin-top: 24px; }
+  .exam-score-label { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 10px; }
+  .net-score-card {
+    background: white; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 12px;
+  }
+  .net-score-text { font-size: 16px; color: #1a1a2e; font-weight: 500; }
+  .net-score-val { font-size: 48px; font-weight: 700; background: linear-gradient(135deg, #f97316, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .net-score-max { font-size: 20px; font-weight: 400; color: #9ca3af; -webkit-text-fill-color: #9ca3af; }
+  .score-details { background: var(--card2); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+  .score-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .score-row:last-child { border-bottom: none; }
+  .score-row-left { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .score-row-right { font-size: 15px; font-weight: 600; }
+  .score-row-right.green { color: var(--green); }
+  .score-row-right.red { color: var(--red); }
+  .score-row-right.blue { color: var(--blue); }
+  .score-meta { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 12px; }
+  .keep-score-row {
+    background: white; border-radius: 14px; padding: 16px 18px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .keep-score-row span { font-size: 15px; color: #1a1a2e; font-weight: 500; }
+  .toggle {
+    width: 50px; height: 28px; border-radius: 99px; border: none; cursor: pointer;
+    position: relative; transition: background 0.2s;
+  }
+  .toggle.on { background: var(--blue); }
+  .toggle.off { background: #d1d5db; }
+  .toggle::after {
+    content: ''; position: absolute; width: 22px; height: 22px;
+    background: white; border-radius: 50%; top: 3px; transition: left 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { left: 25px; }
+  .toggle.off::after { left: 3px; }
+  .restart-btn {
+    width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 600; font-family: inherit;
+    background: var(--blue); color: white; margin-bottom: 10px; transition: opacity 0.15s;
+  }
+  .restart-btn:hover { opacity: 0.88; }
+  .reset-btn {
+    width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 600; font-family: inherit;
+    background: transparent; color: var(--red); border: 1px solid var(--red);
+    transition: opacity 0.15s;
+  }
+  .reset-btn:hover { opacity: 0.75; }
+
+  /* ===== NORM SCREEN ===== */
+  .norm-input-label { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 10px; }
+  .common-terms-label { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 8px; }
+  .terms-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 14px; }
+  .term-btn {
+    background: var(--card2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s; font-family: inherit;
+  }
+  .term-btn:hover { background: var(--blue); border-color: var(--blue); }
+  .norm-input-row {
+    display: flex; align-items: center; gap: 10px; background: var(--card2);
+    border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; border: 1px solid var(--border);
+  }
+  .norm-input-row .par-sign { color: var(--purple); font-size: 22px; font-weight: 700; flex-shrink: 0; }
+  .norm-input {
+    flex: 1; background: none; border: none; color: var(--text); font-size: 17px;
+    font-family: inherit; outline: none;
+  }
+  .norm-input::placeholder { color: var(--text3); }
+  .numpad-label { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 8px; }
+  .numpad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .num-btn {
+    background: var(--blue); color: white; border: none; border-radius: 12px;
+    padding: 14px; font-size: 20px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s; grid-column: auto;
+  }
+  .num-btn:hover { opacity: 0.85; }
+  .num-btn.del { background: var(--red); }
+  .num-btn.zero { grid-column: span 1; }
+
+  .norm-result {
+    background: var(--card2); border-radius: 16px; padding: 16px; margin-bottom: 14px;
+    border-left: 4px solid transparent; display: none;
+  }
+  .norm-result.correct { border-left-color: var(--green); background: rgba(34,197,94,0.08); }
+  .norm-result.wrong { border-left-color: var(--red); background: rgba(239,68,68,0.08); }
+  .norm-result-row { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 4px; }
+  .norm-correct-answer { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* Norm Score */
+  .norm-score-card {
+    background: white; border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 14px;
+  }
+  .norm-score-vals { display: flex; justify-content: space-around; }
+  .norm-score-item .val { font-size: 32px; font-weight: 700; }
+  .norm-score-item .val.green { color: var(--green); }
+  .norm-score-item .val.blue { color: var(--blue); }
+  .norm-score-item .lbl { font-size: 13px; color: #6b7280; }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-container { max-width: 680px; margin: 0 auto; padding: 40px 16px 80px; text-align: center; }
+  .result-emoji { font-size: 64px; margin-bottom: 16px; }
+  .result-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  .result-subtitle { color: var(--text2); margin-bottom: 32px; }
+  .result-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .rstat { background: var(--card); border-radius: 16px; padding: 20px 12px; border: 1px solid var(--border); }
+  .rstat-val { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .rstat-lbl { font-size: 12px; color: var(--text2); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .semester-grid { grid-template-columns: 1fr 1fr; }
+    .home-header h1 { font-size: 22px; }
+    .question-card .qtext { font-size: 15px; }
+    .option-btn { font-size: 14px; padding: 14px 14px; }
+  }
+  @media (min-width: 768px) {
+    .container, .quiz-body { padding-left: 24px; padding-right: 24px; }
+    .quiz-nav { padding: 14px 24px; }
+    .semester-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  /* ===== STREAK BADGE ===== */
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #f97316, #ef4444); color: white;
+    border-radius: 99px; padding: 4px 12px; font-size: 13px; font-weight: 700;
+    margin: 0 auto 12px; width: fit-content;
+  }
+
+  /* ===== REGULAR SCORE DISPLAY ===== */
+  .score-bar {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .score-chip {
+    background: var(--card2); border-radius: 10px; padding: 8px 14px;
+    font-size: 13px; font-weight: 600; border: 1px solid var(--border);
+  }
+  .score-chip .sc-val { font-size: 18px; font-weight: 700; display: block; }
+  .score-chip.green .sc-val { color: var(--green); }
+  .score-chip.red .sc-val { color: var(--red); }
+  .score-chip.blue .sc-val { color: var(--blue); }
+  .score-chip.orange .sc-val { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="homeScreen" class="screen active">
+<div class="container">
+  <div class="home-header">
+    <div class="grad-circle">🎓</div>
+    <h1>Quiz App - Privatrecht</h1>
+    <p>Select a semester or try mixed mode</p>
+  </div>
+
+  <!-- Mastery Card -->
+  <div class="mastery-card">
+    <div class="mastery-header">
+      <div class="mastery-label">📈 Overall Mastery</div>
+      <div class="mastery-pct" id="masteryPct">0%</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="masteryBar" style="width:0%"></div>
+    </div>
+    <div class="mastery-stats">
+      <div class="mstat"><div class="mstat-val green" id="mastCount">0</div><div class="mstat-lbl">✅ Mastered</div></div>
+      <div class="mstat"><div class="mstat-val yellow" id="learnCount">0</div><div class="mstat-lbl">⏸ Learning</div></div>
+      <div class="mstat"><div class="mstat-val gray" id="newCount">0</div><div class="mstat-lbl">○ New</div></div>
+    </div>
+    <div class="mastery-desc">Mastered: 80%+ success rate · Learning: In progress · New: Not attempted</div>
+  </div>
+
+  <!-- Mode Cards -->
+  <div class="mode-card" onclick="startMode('exam')">
+    <div class="mode-icon exam">📋</div>
+    <div class="mode-info">
+      <h3>Exam Mode</h3>
+      <p>18 questions · 36 points · Real exam scoring</p>
+    </div>
+    <div class="mode-arrow">›</div>
+  </div>
+  <div class="mode-card" onclick="startMode('norm')">
+    <div class="mode-icon norm">📖</div>
+    <div class="mode-info">
+      <h3>Norm Questions</h3>
+      <p>Type the paragraph number</p>
+    </div>
+    <div class="mode-arrow">›</div>
+  </div>
+  <div class="mode-card" onclick="startMode('weak')">
+    <div class="mode-icon weak">📊</div>
+    <div class="mode-info">
+      <h3>Weak Topics</h3>
+      <p>18 questions you get wrong the most</p>
+    </div>
+    <div class="mode-arrow">›</div>
+  </div>
+
+  <!-- Single Choice Semesters -->
+  <div class="section-header">Single Choice Questions</div>
+  <div class="semester-grid" id="scGrid"></div>
+
+  <!-- Multiple Choice Semesters -->
+  <div class="section-header">Multiple Choice Questions</div>
+  <div class="semester-grid" id="mcGrid"></div>
+</div>
+</div>
+
+<!-- ========== QUIZ SCREEN ========== -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-nav">
+    <button class="back-btn" onclick="goHome()">‹ Back</button>
+    <div class="quiz-title" id="quizTitle">Quiz</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="quiz-body" id="quizBody"></div>
+</div>
+
+<!-- ========== NORM SCREEN ========== -->
+<div id="normScreen" class="screen">
+  <div class="quiz-nav">
+    <button class="back-btn" onclick="goHome()">‹ Back</button>
+    <div class="quiz-title">Norm Questions</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="quiz-body" id="normBody"></div>
+</div>
+
+<script src="questions.js"></script>
+<script>
+// ===== STATE =====
+let state = {
+  mode: null,
+  questions: [],
+  currentIdx: 0,
+  scores: {}, // questionText -> { correct, attempts }
+  streak: 0,
+  examScore: 0,
+  examCorrect: 0,
+  examWrong: 0,
+  keepScoreOnLoop: true,
+  normCorrect: 0,
+  normAttempted: 0,
+  answered: false,
+  mcSelected: new Set(),
+  normInput: '',
+};
+
+// ===== LOCALSTORAGE =====
+function saveScores() {
+  localStorage.setItem('privatrecht_scores', JSON.stringify(state.scores));
+}
+function loadScores() {
+  try {
+    const s = localStorage.getItem('privatrecht_scores');
+    if (s) state.scores = JSON.parse(s);
+  } catch(e) {}
+}
+function saveExamState() {
+  localStorage.setItem('privatrecht_exam', JSON.stringify({
+    examScore: state.examScore,
+    examCorrect: state.examCorrect,
+    examWrong: state.examWrong
+  }));
+}
+function loadExamState() {
+  try {
+    const s = localStorage.getItem('privatrecht_exam');
+    if (s) {
+      const d = JSON.parse(s);
+      state.examScore = d.examScore || 0;
+      state.examCorrect = d.examCorrect || 0;
+      state.examWrong = d.examWrong || 0;
+    }
+  } catch(e) {}
+}
+function saveNormState() {
+  localStorage.setItem('privatrecht_norm', JSON.stringify({
+    normCorrect: state.normCorrect, normAttempted: state.normAttempted
+  }));
+}
+function loadNormState() {
+  try {
+    const s = localStorage.getItem('privatrecht_norm');
+    if (s) {
+      const d = JSON.parse(s);
+      state.normCorrect = d.normCorrect || 0;
+      state.normAttempted = d.normAttempted || 0;
+    }
+  } catch(e) {}
+}
+
+// ===== INIT =====
+function init() {
+  loadScores();
+  loadExamState();
+  loadNormState();
+  renderHome();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ===== MASTERY CALC =====
+function getMasteryData() {
+  const scNorm = QUESTIONS.filter(q => q.type !== 'multiple_choice');
+  let mastered = 0, learning = 0, newQ = 0;
+  for (const q of scNorm) {
+    const sc = state.scores[q.text];
+    if (!sc || sc.attempts === 0) { newQ++; }
+    else {
+      const rate = sc.correct / sc.attempts;
+      if (rate >= 0.8 && sc.attempts >= 2) mastered++;
+      else learning++;
+    }
+  }
+  const total = scNorm.length;
+  const pct = total ? Math.round((mastered / total) * 100) : 0;
+  return { mastered, learning, newQ: newQ, total, pct };
+}
+
+function getSemMastery(semester, type) {
+  const qs = QUESTIONS.filter(q => q.semester === semester && q.type === type);
+  if (!qs.length) return 0;
+  let m = 0;
+  for (const q of qs) {
+    const sc = state.scores[q.text];
+    if (sc && sc.attempts >= 2 && sc.correct / sc.attempts >= 0.8) m++;
+  }
+  return Math.round((m / qs.length) * 100);
+}
+
+// ===== HOME =====
+function renderHome() {
+  const md = getMasteryData();
+  document.getElementById('masteryPct').textContent = md.pct + '%';
+  document.getElementById('masteryBar').style.width = md.pct + '%';
+  document.getElementById('mastCount').textContent = md.mastered;
+  document.getElementById('learnCount').textContent = md.learning;
+  document.getElementById('newCount').textContent = md.newQ;
+
+  // SC semesters
+  const scSems = ['SS23', 'WS23/24', 'SS24', 'WS24/25', 'SS25', 'Klausurenkurs'];
+  const scGrid = document.getElementById('scGrid');
+  scGrid.innerHTML = '';
+  for (const sem of scSems) {
+    const qs = QUESTIONS.filter(q => q.semester === sem && q.type === 'single_choice');
+    const mPct = getSemMastery(sem, 'single_choice');
+    const isKlausur = sem === 'Klausurenkurs';
+    const div = document.createElement('div');
+    div.className = 'sem-card' + (isKlausur ? ' klausur' : '');
+    div.innerHTML = `
+      <div class="sem-icon">${isKlausur ? '🎓' : '📘'}</div>
+      <div class="sem-name">${sem}</div>
+      <div class="sem-count">${qs.length} questions</div>
+      <div class="sem-mastery-bar"><div class="sem-mastery-fill" style="width:${mPct}%"></div></div>
+    `;
+    div.onclick = () => startSemester(sem, 'single_choice');
+    scGrid.appendChild(div);
+  }
+
+  // MC semesters
+  const mcSems = ['SS23', 'WS23/24'];
+  const mcGrid = document.getElementById('mcGrid');
+  mcGrid.innerHTML = '';
+  for (const sem of mcSems) {
+    const qs = QUESTIONS.filter(q => q.semester === sem && q.type === 'multiple_choice');
+    const div = document.createElement('div');
+    div.className = 'sem-card multi';
+    div.innerHTML = `
+      <div class="sem-icon">✅</div>
+      <div class="sem-name">${sem}</div>
+      <div class="sem-count">${qs.length} questions</div>
+      <div class="sem-mastery-bar"><div class="sem-mastery-fill" style="width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1)"></div></div>
+    `;
+    div.onclick = () => startSemester(sem, 'multiple_choice');
+    mcGrid.appendChild(div);
+  }
+}
+
+function goHome() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('homeScreen').classList.add('active');
+  renderHome();
+}
+
+// ===== START MODES =====
+function startSemester(sem, type) {
+  const qs = QUESTIONS.filter(q => q.semester === sem && q.type === type);
+  state.mode = type === 'multiple_choice' ? 'mc' : 'sc';
+  state.questions = shuffle(qs);
+  state.currentIdx = 0;
+  state.streak = 0;
+  state.answered = false;
+  state.mcSelected = new Set();
+  document.getElementById('quizTitle').textContent = sem;
+  showScreen('quizScreen');
+  renderQuestion();
+}
+
+function startMode(mode) {
+  if (mode === 'exam') {
+    const scQs = QUESTIONS.filter(q => q.type === 'single_choice');
+    const pool = shuffle(scQs).slice(0, 18);
+    state.mode = 'exam';
+    state.questions = pool;
+    state.currentIdx = 0;
+    state.streak = 0;
+    state.answered = false;
+    if (!state.keepScoreOnLoop) {
+      state.examScore = 0; state.examCorrect = 0; state.examWrong = 0;
+    }
+    loadExamState();
+    document.getElementById('quizTitle').textContent = 'Exam Mode';
+    showScreen('quizScreen');
+    renderQuestion();
+  } else if (mode === 'norm') {
+    const qs = QUESTIONS.filter(q => q.type === 'norm');
+    state.mode = 'norm';
+    state.questions = shuffle(qs);
+    state.currentIdx = 0;
+    state.normInput = '';
+    state.answered = false;
+    showScreen('normScreen');
+    renderNormQuestion();
+  } else if (mode === 'weak') {
+    // Sort by worst performance
+    const scNorm = QUESTIONS.filter(q => q.type !== 'multiple_choice');
+    const withScore = scNorm.map(q => {
+      const sc = state.scores[q.text];
+      let rate = 0.5; // unplayed → middle priority
+      if (sc && sc.attempts > 0) rate = sc.correct / sc.attempts;
+      return { q, rate, attempts: sc ? sc.attempts : 0 };
+    });
+    // Sort: most attempted wrong first, then unplayed
+    withScore.sort((a, b) => {
+      if (a.rate !== b.rate) return a.rate - b.rate;
+      return b.attempts - a.attempts;
+    });
+    const pool = withScore.slice(0, 18).map(x => x.q);
+    if (!pool.length) { alert('No questions available!'); return; }
+    state.mode = 'weak';
+    state.questions = pool;
+    state.currentIdx = 0;
+    state.streak = 0;
+    state.answered = false;
+    document.getElementById('quizTitle').textContent = 'Weak Topics';
+    showScreen('quizScreen');
+    renderQuestion();
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ===== RENDER QUESTION (SC/MC/Exam/Weak) =====
+function renderQuestion() {
+  const body = document.getElementById('quizBody');
+  const q = state.questions[state.currentIdx];
+  if (!q) { renderResult(); return; }
+
+  const total = state.questions.length;
+  const idx = state.currentIdx;
+  const pctW = ((idx) / total * 100).toFixed(1);
+  const isExam = state.mode === 'exam';
+  const isMC = q.type === 'multiple_choice';
+  const fillClass = isExam ? 'exam' : 'blue';
+
+  let html = `
+    <div class="progress-section">
+      <div class="progress-label">Question ${idx + 1} of ${total}</div>
+      <div class="progress-bar2"><div class="progress-fill2 ${fillClass}" style="width:${pctW}%"></div></div>
+    </div>
+    <div class="sem-badge">${q.semester}</div>
+    <div class="question-card"><div class="qtext">${q.text}</div></div>
+  `;
+
+  if (isMC) {
+    // Multiple choice
+    html += q.options.map((opt, i) => {
+      let cls = 'option-btn';
+      if (state.mcSelected.has(i)) cls += ' selected';
+      return `<button class="${cls}" id="opt_${i}" onclick="toggleMC(${i})" ${state.answered ? 'disabled' : ''}>
+        <span class="opt-checkbox">${state.mcSelected.has(i) ? '✓' : ''}</span>
+        <span>${opt}</span>
+      </button>`;
+    }).join('');
+    if (!state.answered) {
+      html += `<button class="submit-btn" id="submitMCBtn" onclick="submitMC()" ${state.mcSelected.size === 0 ? 'disabled' : ''}>Submit Answers</button>`;
+    }
+  } else {
+    // Single choice
+    html += q.options.map((opt, i) => {
+      return `<button class="option-btn" id="opt_${i}" onclick="selectSC(${i})">
+        <span class="opt-indicator"></span>
+        <span>${opt}</span>
+      </button>`;
+    }).join('');
+  }
+
+  if (state.answered) {
+    html += `<button class="next-btn" onclick="nextQuestion()">Next Question ›</button>`;
+  }
+
+  // Exam score section
+  if (isExam) {
+    const netScore = state.examScore;
+    html += `
+      <div class="exam-score-section">
+        <div class="exam-score-label">Exam Score</div>
+        <div class="net-score-card">
+          <div class="net-score-text">Net Score: <span class="net-score-val">${netScore.toFixed(1)}</span><span class="net-score-max">/36</span></div>
+        </div>
+        <div class="score-details">
+          <div class="score-row">
+            <div class="score-row-left">✅ Correct: ${state.examCorrect}</div>
+            <div class="score-row-right green">+${(state.examCorrect * 2).toFixed(1)} pts</div>
+          </div>
+          <div class="score-row">
+            <div class="score-row-left">❌ Wrong: ${state.examWrong}</div>
+            <div class="score-row-right red">-${(state.examWrong * 2).toFixed(1)} pts</div>
+          </div>
+          <div class="score-row">
+            <div class="score-row-left">📋 Total Questions:</div>
+            <div class="score-row-right blue">${idx} / 18</div>
+          </div>
+        </div>
+        <div class="score-meta">Each correct: +2 pts · Each wrong: -2 pts</div>
+        <div class="keep-score-row">
+          <span>Keep Score on Loop</span>
+          <button class="toggle ${state.keepScoreOnLoop ? 'on' : 'off'}" id="keepScoreToggle" onclick="toggleKeepScore()"></button>
+        </div>
+        <button class="restart-btn" onclick="restartRound()">↺ Restart Round</button>
+        <button class="reset-btn" onclick="resetScore()">🗑 Reset Score</button>
+      </div>
+    `;
+  } else if (state.mode === 'sc' || state.mode === 'weak') {
+    // Regular score bar
+    const sc = getSessionScore();
+    html += `
+      <div class="score-bar" style="margin-top:20px">
+        <div class="score-chip green"><span class="sc-val">${sc.correct}</span>Correct</div>
+        <div class="score-chip red"><span class="sc-val">${sc.wrong}</span>Wrong</div>
+        <div class="score-chip orange"><span class="sc-val">${sc.streak}</span>Streak 🔥</div>
+      </div>
+      <button class="restart-btn" onclick="restartRound()">↺ Restart Round</button>
+    `;
+  }
+
+  body.innerHTML = html;
+}
+
+let sessionScore = { correct: 0, wrong: 0 };
+function getSessionScore() { return { ...sessionScore, streak: state.streak }; }
+
+function selectSC(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.questions[state.currentIdx];
+  const isCorrect = q.correctIndexes.includes(idx);
+
+  // Update scores
+  if (!state.scores[q.text]) state.scores[q.text] = { correct: 0, attempts: 0 };
+  state.scores[q.text].attempts++;
+
+  if (isCorrect) {
+    state.scores[q.text].correct++;
+    sessionScore.correct++;
+    state.streak++;
+    if (state.mode === 'exam') {
+      state.examScore = Math.min(36, state.examScore + 2);
+      state.examCorrect++;
+      saveExamState();
+    }
+  } else {
+    sessionScore.wrong++;
+    state.streak = 0;
+    if (state.mode === 'exam') {
+      state.examScore = Math.max(-36, state.examScore - 2);
+      state.examWrong++;
+      saveExamState();
+    }
+  }
+  saveScores();
+
+  // Highlight
+  q.options.forEach((_, i) => {
+    const btn = document.getElementById('opt_' + i);
+    if (!btn) return;
+    const ind = btn.querySelector('.opt-indicator');
+    if (q.correctIndexes.includes(i)) {
+      btn.classList.add('correct');
+      ind.textContent = '✓';
+    } else if (i === idx && !isCorrect) {
+      btn.classList.add('wrong');
+      ind.textContent = '✗';
+    }
+    btn.disabled = true;
+  });
+
+  // Add next btn
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = 'Next Question ›';
+  nextBtn.onclick = nextQuestion;
+  document.getElementById('quizBody').appendChild(nextBtn);
+
+  // Update exam score live
+  if (state.mode === 'exam') renderQuestion();
+}
+
+function toggleMC(idx) {
+  if (state.answered) return;
+  if (state.mcSelected.has(idx)) state.mcSelected.delete(idx);
+  else state.mcSelected.add(idx);
+  renderQuestion();
+}
+
+function submitMC() {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.questions[state.currentIdx];
+  const correct = new Set(q.correctIndexes);
+  const selected = state.mcSelected;
+
+  let allCorrect = true;
+  if (selected.size !== correct.size) allCorrect = false;
+  else for (const c of correct) if (!selected.has(c)) { allCorrect = false; break; }
+
+  if (!state.scores[q.text]) state.scores[q.text] = { correct: 0, attempts: 0 };
+  state.scores[q.text].attempts++;
+  if (allCorrect) state.scores[q.text].correct++;
+  saveScores();
+
+  // Highlight all buttons
+  q.options.forEach((_, i) => {
+    const btn = document.getElementById('opt_' + i);
+    if (!btn) return;
+    const cb = btn.querySelector('.opt-checkbox');
+    const isSelected = selected.has(i);
+    const isCorrect2 = correct.has(i);
+    btn.disabled = true;
+    if (isSelected && isCorrect2) { btn.className = 'option-btn mc-correct'; cb.textContent = '✓'; }
+    else if (isSelected && !isCorrect2) { btn.className = 'option-btn mc-wrong'; cb.textContent = '✗'; }
+    else if (!isSelected && isCorrect2) { btn.className = 'option-btn mc-missed'; cb.textContent = '!'; }
+    else { btn.className = 'option-btn'; cb.textContent = ''; }
+  });
+
+  // Replace submit with next
+  const body = document.getElementById('quizBody');
+  const sub = document.getElementById('submitMCBtn');
+  if (sub) sub.remove();
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = 'Next Question ›';
+  nextBtn.onclick = nextQuestion;
+  // Insert before score bar if present
+  body.appendChild(nextBtn);
+}
+
+function nextQuestion() {
+  state.currentIdx++;
+  state.answered = false;
+  state.mcSelected = new Set();
+  if (state.currentIdx >= state.questions.length) {
+    renderResult();
+  } else {
+    renderQuestion();
+    window.scrollTo(0, 0);
+  }
+}
+
+function restartRound() {
+  state.currentIdx = 0;
+  state.answered = false;
+  state.mcSelected = new Set();
+  state.streak = 0;
+  sessionScore = { correct: 0, wrong: 0 };
+  state.questions = shuffle(state.questions);
+  if (state.mode === 'exam' && !state.keepScoreOnLoop) {
+    state.examScore = 0; state.examCorrect = 0; state.examWrong = 0;
+    saveExamState();
+  }
+  renderQuestion();
+  window.scrollTo(0, 0);
+}
+
+function resetScore() {
+  state.examScore = 0; state.examCorrect = 0; state.examWrong = 0;
+  saveExamState();
+  renderQuestion();
+}
+
+function toggleKeepScore() {
+  state.keepScoreOnLoop = !state.keepScoreOnLoop;
+  renderQuestion();
+}
+
+// ===== RESULT SCREEN =====
+function renderResult() {
+  const body = document.getElementById('quizBody');
+  const total = state.questions.length;
+  const sc = sessionScore;
+  const pct = total ? Math.round((sc.correct / total) * 100) : 0;
+  const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪';
+
+  if (state.mode === 'exam') {
+    body.innerHTML = `
+      <div class="result-container">
+        <div class="result-emoji">${emoji}</div>
+        <div class="result-title">Exam Complete!</div>
+        <div class="result-subtitle">Net Score: ${state.examScore.toFixed(1)} / 36</div>
+        <div class="result-stats">
+          <div class="rstat"><div class="rstat-val" style="color:var(--green)">${state.examCorrect}</div><div class="rstat-lbl">Correct</div></div>
+          <div class="rstat"><div class="rstat-val" style="color:var(--red)">${state.examWrong}</div><div class="rstat-lbl">Wrong</div></div>
+          <div class="rstat"><div class="rstat-val" style="color:var(--blue)">${state.examScore.toFixed(1)}</div><div class="rstat-lbl">Net Score</div></div>
+        </div>
+        <button class="restart-btn" onclick="restartRound()">↺ Play Again</button>
+        <button class="reset-btn" style="margin-top:10px" onclick="goHome()">Back to Home</button>
+      </div>
+    `;
+  } else {
+    body.innerHTML = `
+      <div class="result-container">
+        <div class="result-emoji">${emoji}</div>
+        <div class="result-title">Round Complete!</div>
+        <div class="result-subtitle">${pct}% correct this round</div>
+        <div class="result-stats">
+          <div class="rstat"><div class="rstat-val" style="color:var(--green)">${sc.correct}</div><div class="rstat-lbl">Correct</div></div>
+          <div class="rstat"><div class="rstat-val" style="color:var(--red)">${sc.wrong}</div><div class="rstat-lbl">Wrong</div></div>
+          <div class="rstat"><div class="rstat-val" style="color:var(--orange)">${total}</div><div class="rstat-lbl">Total</div></div>
+        </div>
+        <button class="restart-btn" onclick="restartRound()">↺ Play Again</button>
+        <button class="reset-btn" style="margin-top:10px" onclick="goHome()">Back to Home</button>
+      </div>
+    `;
+  }
+}
+
+// ===== NORM QUESTIONS =====
+function renderNormQuestion() {
+  const body = document.getElementById('normBody');
+  const q = state.questions[state.currentIdx];
+  if (!q) {
+    // End of norm questions
+    body.innerHTML = `
+      <div class="result-container">
+        <div class="result-emoji">📖</div>
+        <div class="result-title">Norm Questions Done!</div>
+        <div class="result-subtitle">${state.normCorrect} / ${state.normAttempted} correct</div>
+        <button class="restart-btn" onclick="restartNorm()">↺ Restart Quiz</button>
+        <button class="reset-btn" style="margin-top:10px" onclick="resetNormScore()">🗑 Reset Score</button>
+        <button class="restart-btn" style="margin-top:10px;background:var(--text3)" onclick="goHome()">Back to Home</button>
+      </div>
+    `;
+    return;
+  }
+
+  const total = state.questions.length;
+  const idx = state.currentIdx;
+  const pctW = (idx / total * 100).toFixed(1);
+
+  let resultHtml = '';
+  if (state.normAnswered !== undefined) {
+    const isC = state.normAnswered.isCorrect;
+    resultHtml = `
+      <div class="norm-result ${isC ? 'correct' : 'wrong'}" style="display:block">
+        <div class="norm-result-row">${isC ? '✅' : '❌'} <strong>${isC ? 'Correct!' : 'Wrong'}</strong></div>
+        ${!isC ? `<div class="norm-correct-answer">Your answer: ${state.normAnswered.given || '(empty)'}</div>` : ''}
+        <div class="norm-correct-answer" style="color:${isC?'var(--green)':'var(--text2)'}">Correct answer: § ${q.correctNorm}</div>
+      </div>
+      <button class="next-btn" onclick="nextNorm()">Next Question ›</button>
+    `;
+  }
+
+  body.innerHTML = `
+    <div class="progress-section">
+      <div class="progress-label">Question ${idx + 1} of ${total}</div>
+      <div class="progress-bar2"><div class="progress-fill2 norm" style="width:${pctW}%"></div></div>
+    </div>
+    <div class="sem-badge">${q.semester}</div>
+    <div class="question-card"><div class="qtext">${q.text}</div></div>
+
+    <div class="norm-input-label">Enter the paragraph number:</div>
+    <div class="common-terms-label">Common Terms:</div>
+    <div class="terms-grid">
+      ${['I','II','III','BGB','Abs.','Alt.','S.','i.V.m.'].map(t =>
+        `<button class="term-btn" onclick="appendTerm('${t}')">${t}</button>`
+      ).join('')}
+    </div>
+
+    <div class="norm-input-row">
+      <span class="par-sign">§</span>
+      <input class="norm-input" id="normInput" type="text" placeholder="e.g., 433 II BGB"
+        value="${state.normInput}" onkeydown="normKeydown(event)" oninput="normInputChange(this.value)">
+    </div>
+
+    ${resultHtml ? '' : `
+    <div class="numpad-label">Number Pad:</div>
+    <div class="numpad">
+      ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="num-btn" onclick="normPad('${n}')">${n}</button>`).join('')}
+      <button class="num-btn zero" onclick="normPad('0')">0</button>
+      <button class="num-btn del" style="grid-column:span 2" onclick="normDel()">⌫</button>
+    </div>
+    <button class="submit-btn" onclick="submitNorm()">Submit Answer ✓</button>
+    `}
+
+    ${resultHtml}
+
+    <div class="exam-score-label" style="margin-top:20px">Score</div>
+    <div class="norm-score-card">
+      <div class="norm-score-vals">
+        <div class="norm-score-item"><div class="val green">${state.normCorrect}</div><div class="lbl">Correct</div></div>
+        <div class="norm-score-item"><div class="val blue">${state.normAttempted}</div><div class="lbl">Attempted</div></div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restartNorm()">↺ Restart Quiz</button>
+    <button class="reset-btn" style="margin-top:10px" onclick="resetNormScore()">🗑 Reset Score</button>
+  `;
+
+  if (!state.normAnswered) {
+    const inp = document.getElementById('normInput');
+    if (inp) inp.focus();
+  }
+}
+
+function normInputChange(val) { state.normInput = val; }
+function appendTerm(t) {
+  const inp = document.getElementById('normInput');
+  const cur = inp ? inp.value : state.normInput;
+  const newVal = cur + (cur && !cur.endsWith(' ') ? ' ' : '') + t + ' ';
+  state.normInput = newVal;
+  if (inp) { inp.value = newVal; inp.focus(); }
+}
+function normPad(n) {
+  state.normInput += n;
+  const inp = document.getElementById('normInput');
+  if (inp) { inp.value = state.normInput; inp.focus(); }
+}
+function normDel() {
+  state.normInput = state.normInput.slice(0, -1);
+  const inp = document.getElementById('normInput');
+  if (inp) { inp.value = state.normInput; inp.focus(); }
+}
+function normKeydown(e) {
+  if (e.key === 'Enter') submitNorm();
+}
+
+function normalizeNorm(s) {
+  return s.replace(/\s+/g, ' ').trim().toLowerCase()
+    .replace(/\u00a7/g, '').trim(); // remove § if typed
+}
+
+function submitNorm() {
+  const q = state.questions[state.currentIdx];
+  const inp = document.getElementById('normInput');
+  const given = inp ? inp.value : state.normInput;
+  const isCorrect = normalizeNorm(given) === normalizeNorm(q.correctNorm);
+
+  state.normAttempted++;
+  if (isCorrect) state.normCorrect++;
+  saveNormState();
+
+  // Update mastery scores
+  if (!state.scores[q.text]) state.scores[q.text] = { correct: 0, attempts: 0 };
+  state.scores[q.text].attempts++;
+  if (isCorrect) state.scores[q.text].correct++;
+  saveScores();
+
+  state.normAnswered = { isCorrect, given };
+  renderNormQuestion();
+}
+
+function nextNorm() {
+  state.currentIdx++;
+  state.normInput = '';
+  state.normAnswered = undefined;
+  renderNormQuestion();
+  window.scrollTo(0, 0);
+}
+
+function restartNorm() {
+  state.currentIdx = 0;
+  state.normInput = '';
+  state.normAnswered = undefined;
+  state.questions = shuffle(state.questions);
+  renderNormQuestion();
+  window.scrollTo(0, 0);
+}
+
+function resetNormScore() {
+  state.normCorrect = 0;
+  state.normAttempted = 0;
+  saveNormState();
+  renderNormQuestion();
+}
+
+// ===== BOOT =====
+init();
+</script>
+</body>
+</html>
