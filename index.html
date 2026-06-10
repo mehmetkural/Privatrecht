@@ -567,7 +567,22 @@ const VALID_CODES = [
   'MEMO-TEST-2026',  // örnek kod
 ];
 
+// Erişimi iptal edilmiş kodlar — buraya ekle, push et, kullanıcı anında kilitlenir
+const REVOKED_CODES = [
+  // 'MEMO-TEST-2026',
+];
+
 let isActivated = localStorage.getItem('privatrecht_activated') === 'true';
+
+function checkRevocation() {
+  if (!isActivated) return;
+  const storedCode = localStorage.getItem('privatrecht_code');
+  if (storedCode && REVOKED_CODES.includes(storedCode)) {
+    localStorage.removeItem('privatrecht_activated');
+    localStorage.removeItem('privatrecht_code');
+    isActivated = false;
+  }
+}
 
 function showModal() {
   document.getElementById('activationModal').style.display = 'flex';
@@ -596,6 +611,7 @@ function activateCode() {
   }
   if (VALID_CODES.includes(code)) {
     localStorage.setItem('privatrecht_activated', 'true');
+    localStorage.setItem('privatrecht_code', code);
     isActivated = true;
     msgEl.className = 'code-success';
     msgEl.textContent = '✅ Activation successful! All content unlocked.';
@@ -673,6 +689,7 @@ function loadNormState() {
 
 // ===== INIT =====
 function init() {
+  checkRevocation();
   loadScores();
   loadExamState();
   loadNormState();
