@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Privatrecht Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --card: #1e2433; --card2: #252d40;
+    --border: #2d3748; --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --yellow: #eab308;
+    --orange: #f97316; --purple: #8b5cf6;
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  .container { max-width: 720px; margin: 0 auto; padding: 32px 16px 80px; }
+
+  /* Password gate */
+  .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .gate-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 36px 28px; max-width: 380px; width: 100%; text-align: center; }
+  .gate-icon { font-size: 48px; margin-bottom: 16px; }
+  .gate-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate-card p { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+  .gate-input { width: 100%; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 16px; font-family: inherit; outline: none; margin-bottom: 10px; text-align: center; }
+  .gate-input:focus { border-color: var(--blue); }
+  .gate-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--blue); color: white; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .gate-btn:hover { opacity: 0.88; }
+  .gate-error { color: var(--red); font-size: 13px; margin-top: 10px; }
+
+  /* Header */
+  .admin-header { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+  .admin-icon { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #f97316, #ef4444); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .admin-header h1 { font-size: 24px; font-weight: 700; }
+  .admin-header p { color: var(--text2); font-size: 13px; margin-top: 2px; }
+
+  /* Section */
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+
+  /* Code rows */
+  .code-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+  .code-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .code-row:first-child { padding-top: 0; }
+  .code-tag { font-size: 14px; font-family: monospace; font-weight: 600; letter-spacing: 0.08em; background: var(--card2); padding: 6px 12px; border-radius: 8px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .badge.active { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge.revoked { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .copy-btn { background: var(--card2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+  .copy-btn:hover { background: var(--blue); border-color: var(--blue); color: white; }
+  .empty-state { color: var(--text3); font-size: 14px; text-align: center; padding: 10px 0; }
+
+  /* Code generator */
+  .gen-row { display: flex; gap: 10px; align-items: center; }
+  .gen-output { flex: 1; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 16px; font-family: monospace; font-weight: 700; letter-spacing: 0.1em; outline: none; text-align: center; }
+  .gen-btn { padding: 13px 18px; border-radius: 12px; border: none; background: var(--purple); color: white; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .gen-btn:hover { opacity: 0.88; }
+  .copy-gen-btn { padding: 13px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 15px; cursor: pointer; font-family: inherit; }
+  .copy-gen-btn:hover { background: var(--blue); border-color: var(--blue); color: white; }
+  .gen-note { font-size: 12px; color: var(--text3); margin-top: 8px; }
+
+  /* Stats */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-box { background: var(--card2); border-radius: 12px; padding: 14px 12px; text-align: center; }
+  .stat-val { font-size: 26px; font-weight: 700; }
+  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .stat-val.green { color: var(--green); }
+  .stat-val.red { color: var(--red); }
+  .stat-val.blue { color: var(--blue); }
+  .stat-val.orange { color: var(--orange); }
+  .stat-val.yellow { color: var(--yellow); }
+
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .info-row:first-child { padding-top: 0; }
+  .info-key { color: var(--text2); }
+  .info-val { font-weight: 600; }
+  .info-val.green { color: var(--green); }
+  .info-val.red { color: var(--red); }
+  .info-val.yellow { color: var(--yellow); }
+
+  .questions-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+  .questions-table th { text-align: left; color: var(--text3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .questions-table td { padding: 8px 8px; border-bottom: 1px solid rgba(45,55,72,0.5); line-height: 1.4; }
+  .questions-table tr:last-child td { border-bottom: none; }
+  .pct-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 4px; width: 60px; display: inline-block; vertical-align: middle; margin-left: 6px; }
+  .pct-fill { height: 100%; border-radius: 99px; }
+  .tab-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .tab-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+  .danger-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--red); background: transparent; color: var(--red); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 10px; transition: opacity 0.15s; }
+  .danger-btn:hover { opacity: 0.7; }
+
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <div class="gate-icon">🔐</div>
+    <h2>Admin Panel</h2>
+    <p>Privatrecht Quiz — Admin Access</p>
+    <input class="gate-input" id="pwInput" type="password" placeholder="Password"
+      onkeydown="if(event.key==='Enter') checkPw()">
+    <button class="gate-btn" onclick="checkPw()">Enter</button>
+    <div id="pwError" class="gate-error" style="display:none">Wrong password.</div>
+  </div>
+</div>
+
+<!-- ADMIN CONTENT -->
+<div id="adminContent" style="display:none">
+<div class="container">
+
+  <div class="admin-header">
+    <div class="admin-icon">⚙️</div>
+    <div>
+      <h1>Admin Panel</h1>
+      <p>Privatrecht Quiz — Manage codes & view stats</p>
+    </div>
+  </div>
+
+  <!-- SECTION 1: CODES -->
+  <div class="section">
+    <div class="section-title">Active Codes</div>
+    <div class="card" id="activeCodesCard"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Revoked Codes</div>
+    <div class="card" id="revokedCodesCard"></div>
+  </div>
+
+  <!-- SECTION 2: CODE GENERATOR -->
+  <div class="section">
+    <div class="section-title">Generate New Code</div>
+    <div class="card">
+      <div class="gen-row">
+        <input class="gen-output" id="genOutput" type="text" readonly placeholder="Click Generate →">
+        <button class="gen-btn" onclick="generateCode()">Generate</button>
+        <button class="copy-gen-btn" onclick="copyGenCode()" title="Copy">📋</button>
+      </div>
+      <div class="gen-note">After generating: add this code to <strong>VALID_CODES</strong> in <code>index.html</code> and push to Vercel.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: USER STATS -->
+  <div class="section">
+    <div class="section-title">LocalStorage Stats (This Browser)</div>
+    <div class="card" id="statsCard"></div>
+  </div>
+
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ── Keep in sync with index.html ──────────────────────────────────────────
+const VALID_CODES = [
+  'MEMO-TEST-2026',
+];
+const REVOKED_CODES = [
+
+];
+// ─────────────────────────────────────────────────────────────────────────
+
+const ADMIN_PASSWORD = 'admin2026';
+
+function checkPw() {
+  const val = document.getElementById('pwInput').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    renderAll();
+  } else {
+    document.getElementById('pwError').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function renderAll() {
+  renderCodes();
+  renderStats();
+}
+
+// ── CODES ─────────────────────────────────────────────────────────────────
+function renderCodes() {
+  const activeEl = document.getElementById('activeCodesCard');
+  const revokedEl = document.getElementById('revokedCodesCard');
+
+  if (!VALID_CODES.length) {
+    activeEl.innerHTML = '<div class="empty-state">No active codes.</div>';
+  } else {
+    activeEl.innerHTML = VALID_CODES.map(code => `
+      <div class="code-row">
+        <span class="code-tag">${code}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge active">Active</span>
+          <button class="copy-btn" onclick="copyText('${code}')">Copy</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (!REVOKED_CODES.length) {
+    revokedEl.innerHTML = '<div class="empty-state">No revoked codes.</div>';
+  } else {
+    revokedEl.innerHTML = REVOKED_CODES.map(code => `
+      <div class="code-row">
+        <span class="code-tag" style="opacity:0.55">${code}</span>
+        <span class="badge revoked">Revoked</span>
+      </div>
+    `).join('');
+  }
+}
+
+// ── CODE GENERATOR ────────────────────────────────────────────────────────
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const seg = (n) => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  const code = `PRIV-${seg(4)}-${seg(4)}`;
+  document.getElementById('genOutput').value = code;
+}
+
+function copyGenCode() {
+  const val = document.getElementById('genOutput').value;
+  if (!val) return;
+  copyText(val);
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+let statsTab = 'overview';
+
+function renderStats() {
+  const el = document.getElementById('statsCard');
+
+  const activated = localStorage.getItem('privatrecht_activated') === 'true';
+  const activeCode = localStorage.getItem('privatrecht_code') || '—';
+  const theme = localStorage.getItem('privatrecht_theme') || 'dark';
+
+  let scores = {};
+  try { scores = JSON.parse(localStorage.getItem('privatrecht_scores') || '{}'); } catch(e) {}
+
+  let exam = { examScore: 0, examCorrect: 0, examWrong: 0 };
+  try { exam = JSON.parse(localStorage.getItem('privatrecht_exam') || '{}'); } catch(e) {}
+
+  let norm = { normCorrect: 0, normAttempted: 0 };
+  try { norm = JSON.parse(localStorage.getItem('privatrecht_norm') || '{}'); } catch(e) {}
+
+  const qKeys = Object.keys(scores);
+  const totalAttempted = qKeys.filter(k => scores[k].attempts > 0).length;
+  const totalMastered = qKeys.filter(k => {
+    const s = scores[k];
+    return s.attempts >= 2 && s.correct / s.attempts >= 0.8;
+  }).length;
+
+  // Sort for worst/best
+  const scored = qKeys.filter(k => scores[k].attempts > 0).map(k => ({
+    text: k,
+    pct: Math.round(scores[k].correct / scores[k].attempts * 100),
+    correct: scores[k].correct,
+    attempts: scores[k].attempts,
+  }));
+  const worst10 = [...scored].sort((a,b) => a.pct - b.pct).slice(0, 10);
+  const best10 = [...scored].sort((a,b) => b.pct - a.pct).slice(0, 10);
+
+  el.innerHTML = `
+    <div class="tab-btns">
+      <button class="tab-btn ${statsTab==='overview'?'active':''}" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn ${statsTab==='worst'?'active':''}" onclick="switchTab('worst')">Worst 10</button>
+      <button class="tab-btn ${statsTab==='best'?'active':''}" onclick="switchTab('best')">Best 10</button>
+    </div>
+
+    ${statsTab === 'overview' ? `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-val blue">${totalAttempted}</div><div class="stat-lbl">Attempted</div></div>
+        <div class="stat-box"><div class="stat-val green">${totalMastered}</div><div class="stat-lbl">Mastered</div></div>
+        <div class="stat-box"><div class="stat-val orange">${exam.examScore != null ? Number(exam.examScore).toFixed(1) : '0'}</div><div class="stat-lbl">Exam Score</div></div>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Access Status</span>
+        <span class="info-val ${activated?'green':'yellow'}">${activated ? 'Premium' : 'Free'}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Active Code</span>
+        <span class="info-val">${activated ? activeCode : '—'}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Theme</span>
+        <span class="info-val">${theme}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Exam Correct / Wrong</span>
+        <span class="info-val"><span style="color:var(--green)">${exam.examCorrect||0}</span> / <span style="color:var(--red)">${exam.examWrong||0}</span></span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Norm Correct / Attempted</span>
+        <span class="info-val"><span style="color:var(--green)">${norm.normCorrect||0}</span> / <span style="color:var(--blue)">${norm.normAttempted||0}</span></span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Total Questions Tracked</span>
+        <span class="info-val">${qKeys.length}</span>
+      </div>
+      <button class="danger-btn" onclick="clearAllData()">🗑 Clear All LocalStorage Data</button>
+    ` : ''}
+
+    ${statsTab === 'worst' ? renderQTable(worst10, 'red') : ''}
+    ${statsTab === 'best' ? renderQTable(best10, 'green') : ''}
+  `;
+}
+
+function renderQTable(rows, color) {
+  if (!rows.length) return '<div class="empty-state" style="padding:16px 0">No data yet.</div>';
+  return `
+    <table class="questions-table">
+      <thead><tr>
+        <th>Question</th>
+        <th style="text-align:right">Attempts</th>
+        <th style="text-align:right">Success</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.text.slice(0,80)}${r.text.length>80?'…':''}</td>
+            <td style="text-align:right;color:var(--text2)">${r.attempts}</td>
+            <td style="text-align:right">
+              <span style="color:var(--${color});font-weight:700">${r.pct}%</span>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function switchTab(tab) {
+  statsTab = tab;
+  renderStats();
+}
+
+function clearAllData() {
+  if (!confirm('Clear ALL localStorage data for this browser? This cannot be undone.')) return;
+  ['privatrecht_activated','privatrecht_code','privatrecht_scores','privatrecht_exam','privatrecht_norm','privatrecht_theme'].forEach(k => localStorage.removeItem(k));
+  showToast('All data cleared.');
+  renderStats();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied: ' + text));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+document.getElementById('pwInput').focus();
+</script>
+</body>
+</html>
