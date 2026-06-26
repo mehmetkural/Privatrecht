@@ -2,6 +2,7 @@
 const VALID_CODES = [
   'PRIV-Z5CM-782N',
   'MEMO-TEST-2026',
+  'PRIV-HDME-EAAV',
 ];
 
 const REVOKED_CODES = [
